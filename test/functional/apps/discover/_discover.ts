@@ -7,8 +7,11 @@
  */
 
 import expect from '@kbn/expect';
-
 import { FtrProviderContext } from '../../ftr_provider_context';
+// @ts-ignore
+import { fetchSavedObjects } from '../../../utils/fetch_saved_objects';
+// @ts-ignore
+import { importSavedObjects } from '../../../utils/import_saved_objects';
 
 export default function ({ getService, getPageObjects }: FtrProviderContext) {
   const browser = getService('browser');
@@ -18,6 +21,7 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
   const kibanaServer = getService('kibanaServer');
   const queryBar = getService('queryBar');
   const inspector = getService('inspector');
+  const supertest = getService('supertest');
   const PageObjects = getPageObjects(['common', 'discover', 'header', 'timePicker']);
   const defaultSettings = {
     defaultIndex: 'logstash-*',
@@ -25,11 +29,14 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
 
   describe('discover test', function describeIndexTests() {
     before(async function () {
-      log.debug('load kibana index with default index pattern');
-      await esArchiver.load('discover');
+      // await esArchiver.load('discover');
 
-      // and load a set of makelogs data
+      const dest = 'test/functional/fixtures/exported_saved_objects/discover';
+      // await fetchSavedObjects(dest)(log)(supertest);
+      await importSavedObjects(dest)(log)(supertest);
+      // The tests fail without the following line...investigating.
       await esArchiver.loadIfNeeded('logstash_functional');
+
       await kibanaServer.uiSettings.replace(defaultSettings);
       log.debug('discover');
       await PageObjects.common.navigateToApp('discover');
